@@ -10,15 +10,70 @@ import os
 
 def validate_date_input(date_str: str):
     """
-    使用 datetime 模块验证日期字符串是否合法，格式要求为 YYYY-MM-DD。
+    使用 datetime 模块验证日期字符串是否合法。
+    接受多种日期格式，包括但不限于：
+      YYYY-MM-DD, YYYY.MM.DD, YYYY/MM/DD,
+      DD-MM-YYYY, DD.MM.YYYY, DD/MM/YYYY,
+      MM-DD-YYYY, MM.DD.YYYY, MM/DD/YYYY。
+    对于存在歧义的输入（例如两个数字均小于等于12的情况，如 2.3.2222），将默认采用日-月-年格式。
     返回一个元组 (year, month, day)。
     如果格式错误或日期无效，则抛出 ValueError。
     """
+    date_str = date_str.strip()
+    delimiter = None
+    for d in ["-", "/", "."]:
+        if d in date_str:
+            delimiter = d
+            break
+    if not delimiter:
+        raise ValueError("日期格式错误或日期无效，无法识别分隔符。")
+    parts = date_str.split(delimiter)
+    if len(parts) != 3:
+        raise ValueError("日期格式错误或日期无效，应包含三个部分。")
+    year_index = None
+    for i, part in enumerate(parts):
+        try:
+            num = int(part)
+        except ValueError:
+            raise ValueError("日期格式错误或日期无效，包含非数字字符。")
+        if len(part) == 4 or num >= 1000:
+            year_index = i
+            break
+    if year_index is None:
+        raise ValueError("日期格式错误或日期无效，无法确定年份。")
+    if year_index == 0:
+        fmt = f"%Y{delimiter}%m{delimiter}%d"
+    elif year_index == 2:
+        try:
+            a = int(parts[0])
+            b = int(parts[1])
+        except ValueError:
+            raise ValueError("日期格式错误或日期无效，包含非数字字符。")
+        if a <= 12 and b > 12:
+            fmt = f"%m{delimiter}%d{delimiter}%Y"
+        elif a <= 12 and b <= 12:
+            if sys.stdin.isatty():
+                print("输入日期格式存在歧义，请选择解析方式:")
+                print("输入 '1' 代表日-月-年 (例如 2.3.2222 解析为 2222年3月2日)")
+                print("输入 '2' 代表月-日-年 (例如 2.3.2222 解析为 2222年2月3日)")
+                choice = input("请输入 1 或 2 (回车默认为 1): ").strip()
+                if choice == "2":
+                    fmt = f"%m{delimiter}%d{delimiter}%Y"
+                else:
+                    fmt = f"%d{delimiter}%m{delimiter}%Y"
+            else:
+                fmt = f"%d{delimiter}%m{delimiter}%Y"
+        elif a > 12 and b <= 12:
+            fmt = f"%d{delimiter}%m{delimiter}%Y"
+        else:
+            raise ValueError("日期格式错误或日期无效，月份不可能大于12。")
+    else:
+        raise ValueError("日期格式错误或日期无效，无法识别年份位置。")
     try:
-        date_obj = datetime.datetime.strptime(date_str, "%Y-%m-%d")
+        date_obj = datetime.datetime.strptime(date_str, fmt)
         return date_obj.year, date_obj.month, date_obj.day
     except ValueError as e:
-        raise ValueError("日期格式错误或日期无效，请使用 YYYY-MM-DD 格式。") from e
+        raise ValueError("日期格式错误或日期无效，请检查日期数字。") from e
 
 def calculate_weekday(year: int, month: int, day: int) -> int:
     """
@@ -61,6 +116,60 @@ def log_query(query: str, result: str):
     with open("query_history.log", "a", encoding="utf-8") as f:
         f.write(log_line)
 
+def process_batch_file(file_path, mode_choice):
+    """
+    处理批量文件，根据模式选择导出结果到新文件或修改原文件。
+    mode_choice: "1" 表示导出为新文件, "2" 表示修改原文件
+    """
+    if not os.path.exists(file_path):
+        print(f"错误：文件 {file_path} 不存在。")
+        return
+
+    print(f"开始批量处理文件：{file_path}\n")
+    with open(file_path, "r", encoding="utf-8") as f:
+        lines = f.readlines()
+
+    new_lines = []
+    for line in lines:
+        original_line = line.rstrip("\n")
+        date_str = original_line.strip()
+        if not date_str:
+            new_lines.append("\n")
+            continue
+        try:
+            year, month, day = validate_date_input(date_str)
+        except ValueError as ve:
+            error_msg = f"日期 '{date_str}' 无效：{ve}"
+            print(error_msg)
+            new_lines.append(error_msg + "\n")
+            continue
+        try:
+            datetime.datetime(year, month, day)
+        except ValueError:
+            error_msg = f"日期 '{date_str}' 不合法。"
+            print(error_msg)
+            new_lines.append(error_msg + "\n")
+            continue
+        weekday_index = calculate_weekday(year, month, day)
+        weekday_str = map_weekday(weekday_index)
+        result_str = f"{date_str} -> {year}年{month}月{day}日 是 {weekday_str}。"
+        print(result_str)
+        log_query(date_str, weekday_str)
+        new_lines.append(result_str + "\n")
+
+    if mode_choice == "1":
+        base, ext = os.path.splitext(file_path)
+        new_file = f"{base}_result{ext}"
+        with open(new_file, "w", encoding="utf-8") as f:
+            f.writelines(new_lines)
+        print(f"\n结果已导出至新文件：{new_file}")
+    elif mode_choice == "2":
+        with open(file_path, "w", encoding="utf-8") as f:
+            f.writelines(new_lines)
+        print(f"\n原文件 {file_path} 已被修改。")
+    else:
+        print("无效的处理模式。")
+
 def main():
     """
     程序入口函数。
@@ -82,31 +191,14 @@ def main():
                 print("错误：请指定包含日期的批量文件路径。")
                 return
             file_path = sys.argv[2]
-            if not os.path.exists(file_path):
-                print(f"错误：文件 {file_path} 不存在。")
+            print("请选择批量处理模式：")
+            print("1. 将结果导出为新文件")
+            print("2. 修改原文件")
+            mode_choice = input("请输入 1 或 2：").strip()
+            if mode_choice not in ("1", "2"):
+                print("无效的选择。")
                 return
-            print(f"开始批量处理文件：{file_path}\n")
-            with open(file_path, "r", encoding="utf-8") as f:
-                lines = f.readlines()
-            for line in lines:
-                date_str = line.strip()
-                if not date_str:
-                    continue
-                try:
-                    year, month, day = validate_date_input(date_str)
-                except ValueError as ve:
-                    print(f"日期 '{date_str}' 无效：{ve}")
-                    continue
-                try:
-                    datetime.datetime(year, month, day)
-                except ValueError:
-                    print(f"日期 '{date_str}' 不合法。")
-                    continue
-                weekday_index = calculate_weekday(year, month, day)
-                weekday_str = map_weekday(weekday_index)
-                result_str = f"{year}年{month}月{day}日 是 {weekday_str}。"
-                print(result_str)
-                log_query(date_str, weekday_str)
+            process_batch_file(file_path, mode_choice)
             return
 
     while True:
@@ -118,6 +210,7 @@ def main():
                 day_input = input("请输入日期（例如24）：").strip()
                 year = int(year_input)
                 month = int(month_input)
+
                 day = int(day_input)
             except ValueError:
                 print("输入无效，请输入数字。")
@@ -146,7 +239,6 @@ def main():
             print("感谢使用，再见！")
             break
 
-# 单元测试
 import unittest
 
 class TestZellerDay(unittest.TestCase):
@@ -159,15 +251,13 @@ class TestZellerDay(unittest.TestCase):
         self.assertEqual(calculate_weekday(2020, 2, 29), 0)
     
     def test_validate_date_input(self):
-        # 正确格式
+        # 测试多种正确格式
         self.assertEqual(validate_date_input("2025-02-24"), (2025, 2, 24))
-        # 错误格式应抛出 ValueError
-        with self.assertRaises(ValueError):
-            validate_date_input("2025/02/24")
+        self.assertEqual(validate_date_input("2025/02/24"), (2025, 2, 24))
+        self.assertEqual(validate_date_input("2025.2.24"), (2025, 2, 24))
 
 if __name__ == "__main__":
     if len(sys.argv) > 1 and sys.argv[1] == "test":
-        # 运行单元测试
         unittest.main(argv=[sys.argv[0]])
     else:
         main()
