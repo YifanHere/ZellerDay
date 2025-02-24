@@ -6,7 +6,7 @@ ZellerDay: 计算任一日期对应星期的程序
 
 import datetime
 import sys
-
+import os
 
 def validate_date_input(date_str: str):
     """
@@ -19,7 +19,6 @@ def validate_date_input(date_str: str):
         return date_obj.year, date_obj.month, date_obj.day
     except ValueError as e:
         raise ValueError("日期格式错误或日期无效，请使用 YYYY-MM-DD 格式。") from e
-
 
 def calculate_weekday(year: int, month: int, day: int) -> int:
     """
@@ -37,7 +36,6 @@ def calculate_weekday(year: int, month: int, day: int) -> int:
     h = (day + (13 * (month + 1)) // 5 + year + year // 4 - year // 100 + year // 400) % 7
     return h
 
-
 def map_weekday(h: int) -> str:
     """
     将 calculate_weekday 函数返回的结果映射为具体的星期名称。
@@ -53,16 +51,64 @@ def map_weekday(h: int) -> str:
     }
     return mapping.get(h, "未知星期")
 
+def log_query(query: str, result: str):
+    """
+    将日期查询记录写入到 query_history.log 文件。
+    格式：timestamp - query -> result
+    """
+    now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    log_line = f"{now} - {query} -> {result}\n"
+    with open("query_history.log", "a", encoding="utf-8") as f:
+        f.write(log_line)
 
 def main():
     """
     程序入口函数。
-    显示欢迎信息，循环获取用户输入，进行日期校验和结果输出。
+    根据命令行参数支持查询历史与批量文件处理功能，若无参数则进入交互模式。
     """
     print("欢迎使用 ZellerDay 星期计算器")
-    print("该程序通过蔡勒公式计算任一日期对应的星期。")
-    print("请输入日期，格式为 YYYY-MM-DD 或直接回车后按提示输入。")
-    
+    print("该程序通过蔡勒公式计算任一日期对应星期。\n")
+    if len(sys.argv) > 1:
+        if sys.argv[1] == "history":
+            if os.path.exists("query_history.log"):
+                print("查询历史记录：\n")
+                with open("query_history.log", "r", encoding="utf-8") as f:
+                    print(f.read())
+            else:
+                print("无查询历史记录。")
+            return
+        elif sys.argv[1] == "batch":
+            if len(sys.argv) < 3:
+                print("错误：请指定包含日期的批量文件路径。")
+                return
+            file_path = sys.argv[2]
+            if not os.path.exists(file_path):
+                print(f"错误：文件 {file_path} 不存在。")
+                return
+            print(f"开始批量处理文件：{file_path}\n")
+            with open(file_path, "r", encoding="utf-8") as f:
+                lines = f.readlines()
+            for line in lines:
+                date_str = line.strip()
+                if not date_str:
+                    continue
+                try:
+                    year, month, day = validate_date_input(date_str)
+                except ValueError as ve:
+                    print(f"日期 '{date_str}' 无效：{ve}")
+                    continue
+                try:
+                    datetime.datetime(year, month, day)
+                except ValueError:
+                    print(f"日期 '{date_str}' 不合法。")
+                    continue
+                weekday_index = calculate_weekday(year, month, day)
+                weekday_str = map_weekday(weekday_index)
+                result_str = f"{year}年{month}月{day}日 是 {weekday_str}。"
+                print(result_str)
+                log_query(date_str, weekday_str)
+            return
+
     while True:
         user_input = input("\n请输入日期（如2025-02-24），或直接回车选择逐步输入：").strip()
         if user_input == "":
@@ -83,7 +129,6 @@ def main():
                 print(ve)
                 continue
 
-        # 检查日期合法性：使用 datetime 模块再次校验
         try:
             datetime.datetime(year, month, day)
         except ValueError:
@@ -92,13 +137,14 @@ def main():
 
         weekday_index = calculate_weekday(year, month, day)
         weekday_str = map_weekday(weekday_index)
-        print(f"\n{year}年{month}月{day}日 是 {weekday_str}。")
+        result_str = f"\n{year}年{month}月{day}日 是 {weekday_str}。"
+        print(result_str)
+        log_query(f"{year}-{month:02d}-{day:02d}", weekday_str)
 
         again = input("\n是否要继续计算其他日期？(y/n): ").strip().lower()
         if again != "y":
             print("感谢使用，再见！")
             break
-
 
 # 单元测试
 import unittest
