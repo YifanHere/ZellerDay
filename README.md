@@ -32,7 +32,7 @@ ZellerDay 是一个基于Python实现的日期计算工具，采用经典的[蔡
 ## 📦 快速开始
 
 ### 环境要求
-- Python 3.X
+- Python 3.x
 
 ### 安装步骤
 ```bash
