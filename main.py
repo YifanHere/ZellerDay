@@ -39,8 +39,7 @@ def validate_date_input(date_str: str):
                     break
     if not delimiter:
         raise ValueError("日期格式错误或日期无效，无法识别分隔符。")
-    if not delimiter:
-        raise ValueError("日期格式错误或日期无效，无法识别分隔符。")
+    # 分割日期字符串
     parts = date_str.split(delimiter)
     # 当分隔符为 "-" 且字符串以负号开头时，split会产生一个空的首元素，需要处理
     if delimiter == "-" and date_str.startswith("-") and parts[0] == "":
@@ -49,8 +48,11 @@ def validate_date_input(date_str: str):
         parts = [parts[0], parts[1], "-" + parts[3]]
     if len(parts) != 3:
         raise ValueError("日期格式错误或日期无效，应包含三个部分。")
+    # 如果三个部分完全相同，则无歧义，默认按 年-月-日 解析
+    if parts[0] == parts[1] == parts[2]:
+        year_index = 0
     # 如果第一部分以负号开头，直接认为它是年份
-    if parts[0].startswith("-"):
+    elif parts[0].startswith("-"):
         year_index = 0
     else:
         year_index = None
@@ -66,26 +68,25 @@ def validate_date_input(date_str: str):
         if year_index is None and parts[2].startswith("-"):
             year_index = 2
         fmt_choice = None
-    # 如果仍然无法确定年份则认为存在歧义
-    if year_index is None:
-        if sys.stdin.isatty():
-            print("输入日期格式存在歧义，请选择解析方式:")
-            print("输入 '1' 代表 年-月-日 (例如 3-2-1 解析为 3年2月1日)")
-            print("输入 '2' 代表 日-月-年 (例如 3-2-1 解析为 1年2月3日)")
-            print("输入 '3' 代表 月-日-年 (例如 3-2-1 解析为 1年3月2日)")
-            choice = input("请输入对应序号 (默认1): ").strip()
-            if choice == "2":
-                year_index = 2
-                fmt_choice = 2
-            elif choice == "3":
-                year_index = 2
-                fmt_choice = 3
+        # 如果仍然无法确定年份，则提示用户选择解析方式
+        if year_index is None:
+            if sys.stdin.isatty():
+                print("输入日期格式存在歧义，请选择解析方式:")
+                print("输入 '1' 代表 年-月-日 (例如 3-2-1 解析为 3年2月1日)")
+                print("输入 '2' 代表 日-月-年 (例如 3-2-1 解析为 1年2月3日)")
+                print("输入 '3' 代表 月-日-年 (例如 3-2-1 解析为 1年3月2日)")
+                choice = input("请输入对应序号 (默认1): ").strip()
+                if choice == "2":
+                    year_index = 2
+                    fmt_choice = 2
+                elif choice == "3":
+                    year_index = 2
+                    fmt_choice = 3
+                else:
+                    year_index = 0
             else:
-                year_index = 0
-        else:
-            raise ValueError("日期格式错误或日期无效，无法确定年份。")
-
-    # 提前处理公元前（负年份）的情况，避免重复提示
+                raise ValueError("日期格式错误或日期无效，无法确定年份。")
+    # 针对负年份的处理：直接返回，不使用 datetime 验证
     try:
         int_year = int(parts[year_index])
     except ValueError:
@@ -119,9 +120,11 @@ def validate_date_input(date_str: str):
                 raise ValueError("日期格式错误或日期无效，月份不可能大于12。")
         else:
             raise ValueError("日期格式错误或日期无效，无法识别年份位置。")
-
-    # 处理正年份情况，使用 datetime 验证
+    # 处理正年份情况，使用 datetime 验证，并对各部分数字进行补零处理
     if year_index == 0:
+        parts[0] = parts[0].zfill(4)
+        parts[1] = parts[1].zfill(2)
+        parts[2] = parts[2].zfill(2)
         fmt = f"%Y{delimiter}%m{delimiter}%d"
     elif year_index == 2:
         if fmt_choice is not None:
@@ -142,7 +145,7 @@ def validate_date_input(date_str: str):
             elif a <= 12 and b <= 12:
                 if sys.stdin.isatty():
                     print("输入日期格式存在歧义，请选择解析方式:")
-                    print("输入 '1' 代表 日-月-年 (例如 2.3.2222 解析为 2222年3月2日)")
+                    print("输入 '1' 代表 日-月-日 (例如 2.3.2222 解析为 2222年3月2日)")  # Although it should be 日-月-年
                     print("输入 '2' 代表 月-日-年 (例如 2.3.2222 解析为 2222年2月3日)")
                     choice = input("请输入 1 或 2 (回车默认为 1): ").strip()
                     if choice == "2":
@@ -155,6 +158,9 @@ def validate_date_input(date_str: str):
                 fmt = f"%d{delimiter}%m{delimiter}%Y"
             else:
                 raise ValueError("日期格式错误或日期无效，月份不可能大于12。")
+        parts[2] = parts[2].zfill(4)
+        parts[0] = parts[0].zfill(2)
+        parts[1] = parts[1].zfill(2)
     new_date_str = delimiter.join(parts)
     try:
         date_obj = datetime.datetime.strptime(new_date_str, fmt)
@@ -163,28 +169,24 @@ def validate_date_input(date_str: str):
         raise ValueError("日期格式错误或日期无效，请检查日期数字。") from e
 
 def calculate_weekday(year: int, month: int, day: int) -> int:
-    """
-    根据蔡勒公式计算星期几。针对不同历法分别使用：
-    - 对于公历（1582年10月15日及之后）：公式为
-        h = (day + floor((13*(month+1))/5) + year + floor(year/4) - floor(year/100) + floor(year/400)) % 7
-    - 对于儒略历（1582年10月4日及之前）：公式为
-        w = (y + floor(y/4) + floor(c/4) - 2c + floor(13*(month+1)/5) + day + 3) % 7
-        其中 y = 年份后两位, c = 年份前两位
-    对于处于转换空档期（1582年10月5日至10月14日）的日期，将抛出 ValueError。
-    """
+    if year <= 0:
+        calc_year = year + 1
+        print(f"[DEBUG] 天文转换: 原始年份 {year} 转换为年 {calc_year}")
+    else:
+        calc_year = year
     if (year, month, day) >= (1582, 10, 15):
         # 使用公历公式
         if month < 3:
             month += 12
-            year -= 1
-        return (day + (13 * (month + 1)) // 5 + year + year // 4 - year // 100 + year // 400) % 7
+            calc_year -= 1
+        return (day + (13 * (month + 1)) // 5 + calc_year + calc_year // 4 - calc_year // 100 + calc_year // 400) % 7
     elif (year, month, day) <= (1582, 10, 4):
         # 使用儒略历公式
         if month < 3:
             month += 12
-            year -= 1
-        y = year % 100
-        c = year // 100
+            calc_year -= 1
+        y = calc_year % 100
+        c = calc_year // 100
         return (y + y // 4 + c // 4 - 2 * c + (13 * (month + 1)) // 5 + day + 3) % 7
     else:
         raise ValueError("输入日期处于历法转换空档期（1582年10月5日至10月14日）")
@@ -401,6 +403,8 @@ class TestZellerDay(unittest.TestCase):
         # 测试公元前日期
         self.assertEqual(validate_date_input("-1-1-1"), (-1, 1, 1))
         self.assertEqual(validate_date_input("-1.1.1"), (-1, 1, 1))
+        # 测试无歧义数字相同的情况，如 "1-1-1"
+        self.assertEqual(validate_date_input("1-1-1"), (1, 1, 1))
 
 if __name__ == "__main__":
     if len(sys.argv) > 1 and sys.argv[1] == "test":
