@@ -6,7 +6,7 @@
 
 ## ✨ 项目简介
 
-ZellerDay 是一个基于Python实现的日期计算工具，采用经典的[蔡勒公式](https://en.wikipedia.org/wiki/Zeller%27s_congruence)，只需输入任意合法日期，即可瞬间获取对应的星期信息。项目代码简洁规范，适合作为教学案例。
+ZellerDay 是一个基于Python实现的日期计算工具，采用经典的[蔡勒公式](https://en.wikipedia.org/wiki/Zeller%27s_congruence)，只需输入任意合法日期，即可瞬间获取对应的星期信息。项目功能完善，代码简洁规范，适合作为教学案例。
 
 ```bash
 示例输出：
@@ -91,9 +91,10 @@ python main.py
 
 ## 🌱 扩展计划
 
-- [ ] 添加GUI界面（Tkinter/PyQt）
-- [x] 支持批量日期文件处理
-- [x] 生成日期查询历史报告
-- [ ] 开发REST API接口
+- ✅ 支持批量日期文件处理
+- ✅ 生成日期查询历史报告
+- ✅ 支持更多常用日期格式及日期分隔符
+- ⬜ 开发REST API接口
+- ⬜ 添加GUI界面（Tkinter/PyQt）
 - ......
 ---
