@@ -303,6 +303,18 @@ def main():
     程序入口函数。
     根据命令行参数支持查询历史与批量文件处理功能，若无参数则进入交互模式。
     """
+    if len(sys.argv) > 1:
+        if sys.argv[1] == "batch":
+            if len(sys.argv) < 4:
+                print("使用批量处理模式，需要指定文件名和处理模式。")
+                print("用法: python main.py batch <文件路径> <处理模式>")
+                print("处理模式: 1 - 导出到新文件, 2 - 修改原文件")
+                return
+            file_path = sys.argv[2]
+            mode_choice = sys.argv[3]
+            process_batch_file(file_path, mode_choice)
+            return
+        
     print("欢迎使用 ZellerDay 星期计算器")
     print("该程序通过蔡勒公式计算任一日期对应星期。\n")
     
@@ -383,6 +395,7 @@ def main():
         result_str = f"\n{year:04d}年{month:02d}月{day:02d}日 是 {weekday_str}。"
         print(result_str)
         log_query(f"{year:04d}-{month:02d}-{day:02d}", weekday_str)
+    
 
 import unittest
 
