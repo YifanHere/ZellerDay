@@ -4,3 +4,7 @@
 day_test.txt
 
 *.txt
+
+refactoring_plan.md
+
+!requirements.txt
