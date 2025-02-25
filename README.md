@@ -2,6 +2,7 @@
 
 **Quickly Calculate the Day of Week for Any Date Using Zeller's Congruence | Elegant and Concise Command Line Tool**
 
+**[中文文档](README_zh.md)**
 ---
 
 ## ✨ Project Overview
