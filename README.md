@@ -1,43 +1,83 @@
 # ZellerDay 📅→📆
 
-**通过蔡勒公式快速计算任意日期是星期几 | 优雅简洁的命令行工具**
+**Quickly Calculate the Day of Week for Any Date Using Zeller's Congruence | Elegant and Concise Command Line Tool**
 
 ---
 
-## ✨ 项目简介
+## ✨ Project Overview
 
-ZellerDay 是一个基于Python实现的，采用经典的[蔡勒公式（Zeller's Congruence）](https://en.wikipedia.org/wiki/Zeller%27s_congruence)来计算任一日期对应星期的工具。
-通过内置的日期解析功能，程序支持处理多种常见日期格式，并在遇到输入歧义时通过交互提示用户选择相应解析方式。
-项目功能完善，代码简洁规范，适合作为教学或自学案例。
+ZellerDay is a Python-based tool that uses the classic [Zeller's Congruence](https://en.wikipedia.org/wiki/Zeller%27s_congruence) to calculate the day of the week for any given date.
+With its built-in date parsing functionality, the program supports various common date formats and provides interactive prompts when encountering ambiguous inputs to help users select the appropriate parsing method.
+The project is feature-complete, with clean and standardized code, making it suitable as a teaching or self-learning example.
 
 ---
 
-## 🚀 功能特性
-- ✔️ **高度计算兼容性**：支持使用蔡勒公式计算**任一日期**（除去不存在的日期）对应的星期，**兼容公元前及公元后的日期（负年份）**
-- 🔢 **高度输入兼容性**：当输入存在歧义（例如数值都小于等于31时），程序会通过交互提示用户选择正确的解析方式
-- 📌 **支持两种输入模式**：可一次性输入完整日期或分步输入年月日
-- ⚡ **支持批量日期文件处理**：内置批处理功能，可以读取文本文件中的每行日期，进行计算，并根据用户选择导出为新文件或修改原文件
-- 🔁 **日志记录**：所有日期查询结果均记录在 query_history.log 文件中，记录格式为 “时间戳 - 查询 -> 结果”
-- 📚 **零第三方依赖**：100% 纯Python实现
-- 🛡️  **多格式日期输入**：程序支持多种日期格式，包括但不限于：
+## 🚀 Features
+- ✔️ **High Calculation Compatibility**: Supports calculating the day of the week for **any date** (except non-existent dates) using Zeller's formula, **compatible with both BCE and CE dates (negative years)**
+- 🔢 **High Input Compatibility**: When input is ambiguous (e.g., all values are less than or equal to 31), the program interactively prompts users to select the correct parsing method
+- 📊 **Calendar Conversion Handling**: Automatically handles the conversion between Gregorian and Julian calendars, using the Julian calendar formula for dates on or before October 4, 1582, and the Gregorian calendar formula for dates on or after October 15, 1582
+- 📌 **Two Input Modes**: Supports both one-time complete date input or step-by-step year, month, and day input
+- ⚡ **Batch Date File Processing**: Built-in batch processing functionality can read dates from each line of a text file, perform calculations, and export to a new file or modify the original file based on user choice
+- 🔁 **Logging**: All date query results are recorded in the data/logs/query_history.log file, with the format "timestamp - query -> result"
+- 🌐 **Multilingual Support**: Automatically detects the user's language environment and provides the appropriate interface language (Chinese or English), or allows manual language selection via command line parameters
+- 📚 **Zero Third-party Dependencies**: 100% pure Python implementation
+- 🛡️ **Multiple Date Input Formats**: The program supports various date formats, including but not limited to:
   - YYYY-MM-DD
   - YYYY/MM/DD
   - YYYY.MM.DD
   - DD-MM-YYYY
   - DD/MM/YYYY
   - DD.MM.YYYY
-  - 以及其他格式
+  - And other formats
 
 ---
 
-## 💡 功能提示
+## 📂 Project Structure
 
-- 当月份或日期为个位数时，此时输入的月份或日期会被自动补零，例如：233-1-1会被自动修改为0233-01-01
+```
+ZellerDay/
+├── data/                  # Data directory
+│   └── logs/              # Log storage directory
+├── tests/                 # Test directory
+│   ├── __init__.py
+│   └── test_zeller_day.py # Unit test file
+├── zeller_day/            # Main source code directory
+│   ├── __init__.py
+│   ├── cli.py             # Command line interface module
+│   ├── core.py            # Core calculation module (Zeller's formula implementation)
+│   ├── date_utils.py      # Date processing utilities
+│   ├── io_utils.py        # Input/output utilities
+│   └── language.py        # Language configuration module (multilingual support)
+├── .gitignore
+├── LICENSE.md
+├── main.py                # Program entry point
+├── README.md
+└── requirements.txt
+```
 
-- 批量日期文件处理功能不只支持 txt 格式，只要是文本文件，并且日期可以按行读取，就可以处理。例如，.txt, .csv, .log 等文本格式的文件都可以
+---
 
-- 批量日期文件内的日期需要每行一个日期进行排列，日期格式必须为 YYYY-MM-DD，日期之间使用换行符分隔
-  - 例如，一个符合要求的批量日期文件内容如下：
+## 💡 Usage Tips
+
+- When the month or day is a single digit, the input will be automatically zero-padded. For example, 233-1-1 will be automatically converted to 0233-01-01
+
+- BC Date Processing:
+  - The program supports calculating BC dates, just enter a negative year, e.g. -1414/5/14 for May 14, 1414 BC
+  - The BC date displays astronomical conversion information on the console, e.g. "[DEBUG] Astronomical conversion: Original year -1414 to year -1413"
+
+- The batch date file processing feature supports not only txt format but any text file where dates can be read line by line. For example, .txt, .csv, .log, and other text formats are all supported
+
+- Batch Processing Mode:  
+  - The program supports batch processing of date files using the following command:
+    ```bash
+    python main.py batch <file_path> <processing_mode>
+    ```
+  - Processing modes:
+    - 1 - Export to a new file (generates original_filename_result.extension)
+    - 2 - Modify the original file
+
+- Dates in batch files should be arranged with one date per line, in supported formats such as YYYY-MM-DD, YYYY/MM/DD, or YYYY.MM.DD, separated by line breaks
+  - For example, a compliant batch date file might contain:
     >```bash
     >2025-01-01
     >2025-02-14
@@ -45,27 +85,70 @@ ZellerDay 是一个基于Python实现的，采用经典的[蔡勒公式（Zeller
     >2025-04-01
     >2025-05-01
     >```
-- 批量处理模式：  
-  - 程序支持批量处理日期文件，可以通过在命令行中，使用以下命令来运行批量处理功能：```python main.py batch your_dates.txt```进行处理。用户可以选择导出为新文件或修改原文件。
+
 ---
 
-## 📦 快速开始
+## 📦 Quick Start
 
-### 环境要求
+### Requirements
 - Python 3.x
 
-### 安装步骤
+### Installation
 ```bash
+# Clone the repository
 git clone https://github.com/YifanHere/ZellerDay.git
 cd ZellerDay
+
+# No additional dependencies required
 ```
 
-### 运行程序
+### Running the Program
 ```bash
+# Interactive mode
 python main.py
+
+# Specify language (Chinese)
+python main.py --lang=zh
+
+# Specify language (English)
+python main.py --lang=en
+
+# Batch processing mode
+python main.py batch <file_path> <processing_mode>
+# Example: python main.py batch dates.txt 1
+
+# Batch processing mode with language specification
+python main.py --lang=en batch <file_path> <processing_mode>
 ```
 
-### 使用示例
+### Usage Example
+
+**English Interface (default or using --lang=en parameter)**
+```
+Welcome to ZellerDay Weekday Calculator
+This program calculates the weekday for any date using Zeller's formula.
+
+Please enter a date (e.g. 2025-02-24), or press Enter for step-by-step input: 2025-2-24
+
+2025-02-24 is Monday.
+
+Do you want to calculate another date? (Y/N/Enter):
+Please enter the year (e.g. 2025 or 3 or -123): 5201
+Please enter the month (e.g. 2): 3
+Please enter the day (e.g. 24): 14
+
+5201-03-14 is Wednesday.
+
+Do you want to calculate another date? (Y/N/Enter): -1414/5/14
+[DEBUG] Astronomical conversion: Original year -1414 converted to year -1413
+
+-1414-05-14 is Thursday.
+
+Do you want to calculate another date? (Y/N/Enter): n
+Thank you for using ZellerDay, goodbye!
+```
+
+**Chinese Interface (using --lang=zh parameter)**
 ```
 欢迎使用 ZellerDay 星期计算器
 该程序通过蔡勒公式计算任一日期对应星期。
@@ -81,31 +164,45 @@ python main.py
 
 5201年03月14日 是 星期三。
 
-是否要继续计算其他日期？(Y/N/Enter): -1414/5/14
-[DEBUG] 天文转换: 原始年份 -1414 转换为年 -1413
-
--1414年05月14日 是 星期四。
-
-是否要继续计算其他日期？(Y/N/Enter): 2.3.3
-输入日期格式存在歧义，请选择解析方式:
-输入 '1' 代表 年-月-日 (例如 3-2-1 解析为 3年2月1日)
-输入 '2' 代表 日-月-年 (例如 3-2-1 解析为 1年2月3日)
-输入 '3' 代表 月-日-年 (例如 3-2-1 解析为 1年3月2日)
-请输入对应序号 (默认1): 1
-
-0002年03月03日 是 星期三。
+是否要继续计算其他日期？(Y/N/Enter): n
+感谢使用，再见！
 ```
 
 ---
 
-## 🌱 扩展计划
+## 🧪 Running Tests
 
-- ✅ 支持批量日期文件处理
-- ✅ 生成日期查询历史报告
-- ✅ 支持更多常用日期格式及日期分隔符
-- ⬜ 制作前端页面，将其组件化，开箱即用
-- ⬜ 将该项目制作为一个Python库
-- ⬜ 开发REST API接口
-- ⬜ 添加GUI界面（Tkinter/PyQt）
-- ......
+The project includes comprehensive unit tests that can be run using the following command:
+
+```bash
+# Run from the project root directory
+python -m unittest discover tests
+```
+
+The tests cover key components including core calculation functionality, date validation and parsing, and weekday mapping.
+
 ---
+
+## 🔧 Developer's Guide
+
+### Code Structure
+
+- **core.py**: Contains the implementation of Zeller's formula and weekday mapping functionality
+- **date_utils.py**: Contains date validation, parsing, and formatting functionality
+- **io_utils.py**: Contains logging and batch file processing functionality
+- **cli.py**: Contains command line interface and user interaction functionality
+- **language.py**: Contains multilingual support, language detection, and text localization functionality
+
+### Contribution Guidelines
+
+1. Fork this repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+---
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details
