@@ -8,3 +8,6 @@ day_test.txt
 refactoring_plan.md
 
 !requirements.txt
+tests/__pycache__/
+
+zeller_day/__pycache__/
