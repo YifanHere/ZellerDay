@@ -11,3 +11,5 @@ refactoring_plan.md
 tests/__pycache__/
 
 zeller_day/__pycache__/
+
+.gitignore
