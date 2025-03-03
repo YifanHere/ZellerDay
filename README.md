@@ -3,6 +3,8 @@
 **Quickly Calculate the Day of Week for Any Date Using Zeller's Congruence | Elegant and Concise Command Line Tool**
 
 **[中文文档](README_zh.md)**
+
+This project is a project I practiced years ago when I was learning Python, after writing this project, I was introduced to Python, and in my recent study I was exposed to the Zeller's Congruence again. So uploaded it to GitHub, I made extensions to the original code and further normalized it, aiming to provide reference for more people's learning.
 ---
 
 ## ✨ Project Overview
