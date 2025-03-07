@@ -4,7 +4,7 @@
 
 **[中文文档](README_zh.md)**
 
-This project is a project I practiced years ago when I was learning Python, after writing this project, I was introduced to Python, and in my recent study I was exposed to the Zeller's Congruence again. So uploaded it to GitHub, I made extensions to the original code and further normalized it, aiming to provide reference for more people's learning.
+This project is one that I practiced while learning Python years ago. After completing this project, my programming skills improved significantly. In my recent research, I came across Zeller's Congruence again. Therefore, I uploaded it to GitHub, expanded and further standardized the original code, aiming to provide a reference for more people's learning.
 
 ---
 
